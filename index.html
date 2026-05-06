@@ -338,7 +338,7 @@
             }
         }
 
-        // --- RENDER HOME ---
+         // --- RENDER HOME ---
         async function renderHome() {
             const grid = document.getElementById('noteGrid');
             const widget = grid.firstElementChild; // Keep Create button
@@ -383,7 +383,7 @@
             document.getElementById('totalCount').innerText = notes.length;
         }
 
-      // --- EDITOR LOGIC ---
+        // --- EDITOR LOGIC ---
         async function openNote(id) {
             if(!id) {
                 const n = { id: Date.now(), title: "", content: "", date: new Date().toLocaleDateString(), bgCol: '', titleCol: '', font: 'Montserrat' };
