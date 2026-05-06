@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Idea BookLand Premium Pro</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pacifico&family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&family=Roboto:wght@400;700&family=Lora:ital,wght@0,400;1,700&family=Courier+Prime&family=Poppins:wght@400;600&display=swap');
+
+        :root {
+            --bg: #0f172a; --sidebar: #1e293b; --text: #f1f5f9;
+            --border: rgba(255,255,255,0.1); --accent: #00BFC0;
+            --logo: linear-gradient(to right, #4facfe, #FE0D6D);
+            --premium-btn: linear-gradient(135deg, #FE0D6D, #00A1D8); 
+        }
+
+        .light-mode {
+            --bg: #f8fafc; --sidebar: #ffffff; --text: #1e293b;
+            --border: rgba(0,0,0,0.1);
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body, html { margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; transition: 0.3s ease; }
+
+        .screen { position: fixed; inset: 0; display: none; opacity: 0; transition: 0.3s ease; z-index: 10; }
+        .screen.active { display: flex; opacity: 1; }
+
+        /* --- DASHBOARD --- */
+        #homeScreen { flex-direction: column; padding: 30px 20px; overflow-y: auto; }
+        .header-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; position: relative;}
+        
+        .logo-main { 
+            font-family: 'Pacifico', cursive; 
+            font-size: 2.4rem; 
+            background: var(--logo); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            margin: 0; 
+            padding-right: 10px; 
+            display: inline-block; 
+        }
+        
+        .subtitle { font-size: 0.8rem; opacity: 0.5; margin-top: -5px; }
+        
+        .top-actions { display: flex; align-items: center; gap: 15px; }
+        .theme-btn { font-size: 1.5rem; cursor: pointer; filter: grayscale(1); }
+        
+        /* DONE BUTTON FOR DELETE MODE */
+        #doneDeleteBtn {
+            display: none;
+            background: var(--premium-btn);
+            color: white; border: none; padding: 8px 15px;
+            border-radius: 20px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .stats-container { display: flex; gap: 15px; margin-bottom: 30px; }
+        .stat-box { flex: 1; background: var(--sidebar); padding: 15px; border-radius: 20px; border: 1px solid var(--border); }
+        .stat-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; opacity: 0.6; display: block; margin-bottom: 5px; }
+        .stat-num { font-size: 1.5rem; font-weight: 700; color: #F7CE15; }
+
+        .section-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 15px; }
+        
+        .note-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding-bottom: 40px; }
+        
+        .grad-create { background: var(--premium-btn); color: white; border: none; }
+
+        .card { aspect-ratio: 1/1; border-radius: 25px; display: flex; flex-direction: column; padding: 20px; position: relative; border: 1px solid var(--border); box-shadow: 0 4px 15px rgba(0,0,0,0.1); user-select: none; -webkit-user-select: none; }
+        .card h4 { margin: 0; font-size: 1.1rem; pointer-events: none;}
+        .card span.date { font-size: 0.7rem; margin-top: 8px; pointer-events: none;}
+
+        /* --- SHAKING ANIMATION & DELETE MODE --- */
+        @keyframes shake {
+            0% { transform: rotate(-1.5deg); }
+            50% { transform: rotate(1.5deg); }
+            100% { transform: rotate(-1.5deg); }
+        }
+        
+        .delete-mode .card.idea-card {
+            animation: shake 0.3s infinite;
+        }
+
+        .card-delete-btn {
+            position: absolute;
+            top: 5px; right: 5px;
+            background: rgba(254, 13, 109, 0.9); 
+            color: white; border: none; border-radius: 50%;
+            width: 28px; height: 28px;
+            font-size: 14px; font-weight: bold;
+            display: none; align-items: center; justify-content: center;
+            cursor: pointer; z-index: 5;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        
+        .delete-mode .card-delete-btn {
+            display: flex;
+        }
+
+        /* --- CANVAS --- */
+        #canvasScreen { flex-direction: row; }
+        
+        #sideBar { 
+            width: 65px; background: var(--sidebar); display: flex; flex-direction: column; 
+            align-items: center; padding: 15px 0 120px; border-right: 1px solid var(--border); 
+            transition: 0.3s ease; position: relative; z-index: 20;
+            overflow-y: auto; scrollbar-width: none;
+        }
+        #sideBar::-webkit-scrollbar { display: none; }
+        #sideBar.hidden { transform: translateX(-65px); width: 0; padding: 0; border: none; overflow: hidden; }
+
+        .t-btn { width: 42px; min-height: 42px; border-radius: 10px; border: none; background: transparent; color: var(--text); font-size: 1.1rem; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; outline: none; cursor: pointer;}
+        
+        .palette-popup { position: fixed; left: 75px; bottom: 100px; background: var(--sidebar); border: 1px solid var(--border); border-radius: 20px; padding: 12px; display: none; grid-template-columns: repeat(4, 1fr); gap: 8px; z-index: 100; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .color-dot { width: 30px; height: 30px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2); }
+
+        .font-popup { position: fixed; left: 75px; top: 100px; background: var(--sidebar); border: 1px solid var(--border); border-radius: 15px; padding: 10px; display: none; flex-direction: column; gap: 5px; z-index: 100; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .font-option { padding: 8px 15px; cursor: pointer; border-radius: 8px; font-size: 0.9rem; white-space: nowrap; }
+        .font-option:hover { background: var(--accent); color: white; }
+
+        #editor { flex: 1; padding: 20px 25px; font-size: 1.1rem; overflow-y: auto; outline: none; line-height: 1.6; overflow-wrap: anywhere; word-break: break-word; white-space: pre-wrap; }
+        #titleInput { width: 100%; border: none; background: transparent; color: var(--text); font-size: 2.2rem; font-weight: 800; padding: 35px 25px 5px; outline: none; font-family: 'Playfair Display', serif; }
+
+        .tool-toggle { 
+            position: fixed; left: 12px; bottom: 20px; 
+            background: var(--premium-btn); 
+            width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; border: none; z-index: 150; 
+            box-shadow: 0 4px 15px rgba(254, 13, 109, 0.3);
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <section id="homeScreen" class="screen active">
+        <div class="header-row">
+            <div>
+                <h1 class="logo-main">Idea BookLand</h1>
+                <div class="subtitle">Premium Digital Workspace</div>
+            </div>
+            <div class="top-actions">
+                <button id="doneDeleteBtn" onclick="deactivateDeleteMode()">Done</button>
+                <div class="theme-btn" onclick="toggleTheme()" id="tIcon">🌞</div>
+            </div>
+        </div>
+
+        <div class="stats-container">
+            <div class="stat-box">
+                <span class="stat-label">Total Ideas</span>
+                <span id="totalCount" class="stat-num">0</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">Today</span>
+                <span class="stat-num" style="color:#00BFC0;">New</span>
+            </div>
+        </div>
+
+        <h2 class="section-title">Recent Space</h2>
+
+        <div class="note-grid" id="noteGrid">
+            <div class="card grad-create" onclick="if(!isDeleteMode) openNote(null)">
+                <div style="flex:1; display:flex; align-items:center; justify-content:center; font-size:2.5rem; font-weight:300;">+</div>
+                <div style="font-weight:600; text-align:center;">Create Idea</div>
+            </div>
+        </div>
+    </section>
+
+    <section id="canvasScreen" class="screen">
+        <aside id="sideBar">
+            <button class="t-btn" onclick="closeNote()">🏠</button>
+            <div style="height:1px; width:30px; background:var(--border); margin:5px 0;"></div>
+            
+            <button class="t-btn" onclick="toggleFontPopup()">fF</button>
+            <button class="t-btn" onclick="cycleHeading()" id="headBtn" style="font-weight:bold">H</button>
+            
+            <div style="height:1px; width:30px; background:var(--border); margin:5px 0;"></div>
+            <button class="t-btn" onclick="doc('bold')"><b>B</b></button>
+            <button class="t-btn" onclick="doc('italic')"><i>I</i></button>
+            <button class="t-btn" onclick="doc('underline')">U</button>
+            
+            <div style="height:1px; width:30px; background:var(--border); margin:5px 0;"></div>
+            <button class="t-btn" onclick="doc('insertUnorderedList')">•≡</button>
+            <button class="t-btn" onclick="doc('insertOrderedList')">1≡</button>
+            
+            <div style="height:1px; width:30px; background:var(--border); margin:5px 0;"></div>
+            <button class="t-btn" onclick="doc('justifyLeft')">|<≡</button>
+            <button class="t-btn" onclick="doc('justifyCenter')">≡</button>
+            <button class="t-btn" onclick="doc('justifyRight')">≡|</button>
+            
+            <div style="height:1px; width:30px; background:var(--border); margin:5px 0;"></div>
+            <button class="t-btn" onclick="exportTxt()">📄</button>
+            
+            <div style="height:1px; width:30px; background:var(--border); margin:5px 0;"></div>
+            <button class="t-btn" onclick="deleteCurrentNote()" style="color: #FE0D6D;" title="Delete Idea">🗑️</button>
+            
+            <div style="margin-top:auto;">
+                <button class="t-btn" onclick="openPalette('text')" style="color:var(--accent); font-weight:bold; border:1.5px solid var(--accent)">A</button>
+                <button class="t-btn" onclick="openPalette('title')" style="font-size:0.8rem; border:1.5px solid #FE0D6D">Title</button>
+                <button class="t-btn" onclick="openPalette('bg')">🎨</button>
+            </div>
+        </aside>
+
+        <button class="tool-toggle" onclick="toggleSidebar()">✒️</button>
+        
+        <div id="palettePop" class="palette-popup"></div>
+        <div id="fontPop" class="font-popup"></div>
+
+        <div id="mainCanvas" style="flex:1; display:flex; flex-direction:column; min-width: 0;">
+            <input type="text" id="titleInput" placeholder="Idea Name..." oninput="save()">
+            <div id="editor" contenteditable="true" oninput="save()"></div>
+        </div>
+    </section>
+
+    <script>
+        // ========================================
+        // IndexedDB Setup 
+        // ========================================
+        const DB_NAME = 'IdeaBookLand';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'notes';
+        let db = null;
+
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => { db = request.result; resolve(db); };
+                request.onupgradeneeded = (event) => {
+                    const database = event.target.result;
+                    if (!database.objectStoreNames.contains(STORE_NAME)) {
+                        database.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                    }
+                };
+            });
+        }
+
+        function getAllNotes() {
+            return new Promise((resolve, reject) => {
+                if (!db) return resolve([]);
+                const request = db.transaction([STORE_NAME], 'readonly').objectStore(STORE_NAME).getAll();
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        function getNoteById(id) {
+            return new Promise((resolve, reject) => {
+                if (!db) return reject('No DB');
+                const request = db.transaction([STORE_NAME], 'readonly').objectStore(STORE_NAME).get(id);
+                request.onsuccess = () => resolve(request.result);
+            });
+        }
+
+        function saveNoteToDB(note) {
+            return new Promise((resolve, reject) => {
+                if (!db) return reject('No DB');
+                const request = db.transaction([STORE_NAME], 'readwrite').objectStore(STORE_NAME).put(note);
+                request.onsuccess = () => resolve();
+            });
+        }
+
+        function deleteNoteFromDB(id) {
+            return new Promise((resolve, reject) => {
+                if (!db) return reject('No DB');
+                const request = db.transaction([STORE_NAME], 'readwrite').objectStore(STORE_NAME).delete(id);
+                request.onsuccess = () => resolve();
+            });
+        }
+
+        // ========================================
+        // App Logic & Long Press Delete
+        // ========================================
+        let activeId = null;
+        let isDeleteMode = false;
+        let pressTimer;
+
+        const cardGradients = [
+            "linear-gradient(135deg, #00BFC0, #00A1D8)",
+            "linear-gradient(135deg, #7851A5, #FE0D6D)",
+            "linear-gradient(135deg, #FD5E00, #F7CE15)",
+            "linear-gradient(135deg, #91CA57, #00BFC0)",
+            "linear-gradient(135deg, #4facfe, #00f2fe)"
+        ];
+
+        async function init() {
+            await initDB();
+            
+            const colors = ["#EE7EA0", "#FE0D6D", "#00A1D8", "#00BFC0", "#91CA57", "#F7CE15", "#FD5E00", "#7851A5", "#FFFFFF", "#1e293b", "#0f172a", "#000000"];
+            const container = document.getElementById('palettePop');
+            colors.forEach(c => {
+                const d = document.createElement('div');
+                d.className = 'color-dot'; d.style.backgroundColor = c;
+                d.onmousedown = (e) => { e.preventDefault(); applyStyle(c); };
+                container.appendChild(d);
+            });
+
+            const fonts = ['Montserrat', 'Playfair Display', 'Roboto', 'Lora', 'Courier Prime', 'Poppins'];
+            const fontPop = document.getElementById('fontPop');
+            fonts.forEach(f => {
+                const o = document.createElement('div');
+                o.className = 'font-option'; o.innerText = f; o.style.fontFamily = f;
+                o.onclick = () => applyFont(f);
+                fontPop.appendChild(o);
+            });
+            
+            await renderHome();
+        }
+
+        // --- SHAKING / DELETE MODE LOGIC ---
+        function activateDeleteMode() {
+            isDeleteMode = true;
+            document.getElementById('noteGrid').classList.add('delete-mode');
+            document.getElementById('doneDeleteBtn').style.display = 'block';
+            if (navigator.vibrate) navigator.vibrate(50); // Small vibrate on phone
+        }
+
+        function deactivateDeleteMode() {
+            isDeleteMode = false;
+            document.getElementById('noteGrid').classList.remove('delete-mode');
+            document.getElementById('doneDeleteBtn').style.display = 'none';
+        }
+
+        function startPress() {
+            if (isDeleteMode) return;
+            pressTimer = window.setTimeout(activateDeleteMode, 600); // 0.6 seconds hold
+        }
+
+        function cancelPress() {
+            clearTimeout(pressTimer);
+        }
+
+        async function deleteNoteFromHome(id) {
+            if (confirm("ဖျက်မှာသေချာပြီလား?")) {
+                await deleteNoteFromDB(id);
+                await renderHome();
+                // If no notes left, exit delete mode
+                const notes = await getAllNotes();
+                if(notes.length === 0) deactivateDeleteMode();
+            }
+        }
+
+        // --- RENDER HOME ---
+        async function renderHome() {
+            const grid = document.getElementById('noteGrid');
+            const widget = grid.firstElementChild; // Keep Create button
+            grid.innerHTML = ''; 
+            grid.appendChild(widget);
+            
+            const notes = await getAllNotes();
+            notes.sort((a, b) => b.id - a.id);
+            
+            notes.forEach((n, index) => {
+                const card = document.createElement('div');
+                card.className = 'card idea-card';
+                card.style.background = cardGradients[index % cardGradients.length];
+                card.style.color = "white";
+                
+                card.innerHTML = `
+                    <button class="card-delete-btn" onclick="event.stopPropagation(); deleteNoteFromHome(${n.id})">✕</button>
+                    <h4 style="color: white;">${n.title || 'Draft Idea'}</h4>
+                    <span class="date" style="color: rgba(255,255,255,0.8);">${n.date}</span>
+                `;
+                
+                // Click logic (Don't open note if in delete mode)
+                card.onclick = (e) => {
+                    if (isDeleteMode) {
+                        e.preventDefault();
+                    } else {
+                        openNote(n.id);
+                    }
+                };
+
+                // Touch & Mouse events for Long Press
+                card.addEventListener('touchstart', startPress, {passive: true});
+                card.addEventListener('touchend', cancelPress);
+                card.addEventListener('touchmove', cancelPress);
+                card.addEventListener('mousedown', startPress);
+                card.addEventListener('mouseup', cancelPress);
+                card.addEventListener('mouseleave', cancelPress);
+
+                grid.appendChild(card);
+            });
+            
+            document.getElementById('totalCount').innerText = notes.length;
+        }
+
+      // --- EDITOR LOGIC ---
+        async function openNote(id) {
+            if(!id) {
+                const n = { id: Date.now(), title: "", content: "", date: new Date().toLocaleDateString(), bgCol: '', titleCol: '', font: 'Montserrat' };
+                await saveNoteToDB(n);
+                activeId = n.id;
+            } else {
+                activeId = id;
+            }
+            const note = await getNoteById(activeId);
+            document.getElementById('titleInput').value = note.title;
+            document.getElementById('titleInput').style.color = note.titleCol || '';
+            document.getElementById('editor').innerHTML = note.content;
+            document.getElementById('editor').style.fontFamily = note.font || 'Montserrat';
+            document.getElementById('mainCanvas').style.backgroundColor = note.bgCol || '';
+            switchScreen('canvasScreen');
+        }
+
+        async function closeNote() { 
+            switchScreen('homeScreen'); 
+            await renderHome(); 
+        }
+
+        function switchScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            setTimeout(() => {
+                document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
+                const target = document.getElementById(id);
+                target.style.display = 'flex';
+                setTimeout(() => target.classList.add('active'), 50);
+            }, 300);
+        }
+
+        async function save() {
+            if (!activeId) return;
+            const note = await getNoteById(activeId);
+            if(note) {
+                note.title = document.getElementById('titleInput').value;
+                note.content = document.getElementById('editor').innerHTML;
+                note.bgCol = document.getElementById('mainCanvas').style.backgroundColor;
+                note.titleCol = document.getElementById('titleInput').style.color;
+                note.font = document.getElementById('editor').style.fontFamily;
+                await saveNoteToDB(note);
+            }
+        }
+
+        async function deleteCurrentNote() {
+            if (!activeId) return;
+            if (confirm("ဒီ Idea ကို တကယ်ဖျက်မှာ သေချာပြီလား?")) {
+                await deleteNoteFromDB(activeId);
+                activeId = null;
+                await closeNote(); 
+            }
+        }
+
+        // UI Tools (Fonts, Colors, Themes)
+        let paletteTarget = 'text';
+        function toggleTheme() { document.body.classList.toggle('light-mode'); document.getElementById('tIcon').innerText = document.body.classList.contains('light-mode') ? "🌚" : "🌞"; }
+        function toggleSidebar() { document.getElementById('sideBar').classList.toggle('hidden'); }
+        function doc(cmd) { document.execCommand(cmd, false, null); document.getElementById('editor').focus(); save(); }
+        function openPalette(type) { paletteTarget = type; const p = document.getElementById('palettePop'); p.style.display = p.style.display === 'grid' ? 'none' : 'grid'; document.getElementById('fontPop').style.display = 'none'; }
+        function toggleFontPopup() { const p = document.getElementById('fontPop'); p.style.display = p.style.display === 'flex' ? 'none' : 'flex'; document.getElementById('palettePop').style.display = 'none'; }
+        function applyFont(font) { document.getElementById('editor').style.fontFamily = font; toggleFontPopup(); save(); }
+        function applyStyle(val) {
+            if (paletteTarget === 'text') document.execCommand('foreColor', false, val);
+            if (paletteTarget === 'title') document.getElementById('titleInput').style.color = val;
+            if (paletteTarget === 'bg') document.getElementById('mainCanvas').style.backgroundColor = val;
+            save();
+        }
+        let headingLevel = 0;
+        function cycleHeading() {
+            headingLevel = (headingLevel + 1) % 3;
+            document.execCommand('formatBlock', false, ['p', 'h1', 'h2'][headingLevel]);
+            document.getElementById('headBtn').innerText = headingLevel === 0 ? 'H' : 'H' + headingLevel;
+        }
+        function exportTxt() {
+            const t = document.getElementById('titleInput').value || 'Idea';
+            const b = new Blob([document.getElementById('editor').innerText], {type:'text/plain'});
+            const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `${t}.txt`; a.click();
+        }
+
+        init();
+    </script>
+</body>
+</html>
