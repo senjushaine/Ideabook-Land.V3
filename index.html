@@ -389,8 +389,8 @@
                 await renderHome();
             }
         }
-        // 
-========================================
+
+        // ========================================
         // Text Tools & Native Image Cropping Export
         // ========================================
         function changeFont(fontVal) {
@@ -416,7 +416,7 @@
             const ctx = canvas.getContext('2d');
             canvas.width = 600; 
             
-      // Text measurement & word wrap algorithm
+            // Text measurement & word wrap algorithm
             ctx.font = '16px ' + document.getElementById('fontSelect').value;
             const words = textContent.split(/\s+/);
             let lines = [];
